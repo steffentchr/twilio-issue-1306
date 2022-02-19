@@ -1,0 +1,90 @@
+<html>
+  <head>
+    <script src="//sdk.twilio.com/js/video/releases/2.20.0/twilio-video.min.js"></script>
+  </head>
+  <body>
+    <div>Webcam: <span>Started and added</span></div>
+    <div>Screen: <span id="screenStatus"></span></div>
+    <div id="status"></div>
+    <video id="webcam" muted autoplay></video>
+    <video id="screen" muted autoplay></video>
+    <script>
+     function screenStatus(text) {
+       document.getElementById('screenStatus').innerText = text;
+     }
+     function timeout(ms) {
+       return new Promise((resolve) => setTimeout(resolve, ms));
+     }
+
+     (async function start() {
+       var config = await (await fetch('/room.json')).json()
+       var TOKEN = config.broadcasterToken;
+
+       // Connect to video to play back
+       var room = await Twilio.Video.connect(TOKEN, {
+         automaticSubscription: true,
+         dominantSpeaker: false,
+         logLevel: "info",
+         video: false,
+         audio: false,
+         preferredVideoCodecs: [{ codec: "VP8", simulcast: false }],
+         networkQuality: {
+           local: 1,
+           remote: 2,
+         },
+         bandwidthProfile: {
+           video: {
+             mode: "collaboration",
+             trackSwitchOffMode: "detected",
+             contentPreferencesMode: 'auto',
+             clientTrackSwitchOffControl: 'auto'
+           },
+         },
+       });
+
+       // Prepare the screensharing
+       var screen = await navigator.mediaDevices.getDisplayMedia();
+       
+       // Add high priority webcam
+       var webcam = await Twilio.Video.createLocalVideoTrack({
+         frameRate: { min: 2, ideal: 20, max: 30 },
+         width: { min: 320, ideal: 1280, max: 1920 },
+         height: { min: 180, ideal: 720, max: 1080 },
+       });
+       var webcamPublication = await room.localParticipant.publishTrack(
+         webcam
+       );
+       webcamPublication.setPriority("high");
+       webcam.attach(document.getElementById("webcam"));
+
+       // Wait for 120s to let the stream settle
+       screenStatus('Not added yet.');
+       await timeout(120000);
+
+       // Add low priority screen
+       var screenTrack = screen.getVideoTracks()[0];
+       screenTrack.applyConstraints({
+         frameRate: { min: 2, ideal: 7, max: 15 },
+         width: { min: 320, ideal: 320, max: 1920 },
+         height: { min: 180, ideal: 180, max: 1080 },
+       });
+       var screen = new Twilio.Video.LocalVideoTrack(screenTrack);
+       var screenPublication = await room.localParticipant.publishTrack(
+         screen
+       );
+       screenPublication.setPriority("low");
+       screen.attach(document.getElementById("screen"));
+
+       screenStatus('Started and added.');
+       
+       // Wait for 120s to let the stream settle
+       await timeout(120000);
+
+       // Unpublish from Twilio
+       screenStatus('Removed again.');
+       screenPublication.unpublish();
+       screenTrack.stop();
+     })()
+    </script>
+  </body>
+</html>

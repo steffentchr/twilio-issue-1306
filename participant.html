@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <script src="//sdk.twilio.com/js/video/releases/2.20.0/twilio-video.min.js"></script>
+  </head>
+  <body>
+    <div id="display"></div>
+    <script>
+     var room;
+     (async function() {
+       var config = await (await fetch('/room.json')).json()
+       var TOKEN = config.participantToken;
+
+       function timeout(ms) {
+         return new Promise((resolve) => setTimeout(resolve, ms));
+       }
+       
+       // Connect to video to play back
+       room = await Twilio.Video.connect(TOKEN, {
+         automaticSubscription: true,
+         logLevel: "info",
+         video: false,
+         audio: false
+       });
+       function attachTrack(track) {
+         console.log("attachTrack", {track});
+         document.getElementById('display').appendChild(track.attach());
+       }
+       room.participants.forEach(participant => {
+         participant.tracks.forEach(publication => {
+               if (publication.track) {
+                 attachTrack(publication.track);
+               }
+             });
+         
+         participant.on('trackSubscribed', attachTrack);
+       });
+       room.on('participantConnected', participant => {
+         participant.tracks.forEach(publication => {
+           if (publication.isSubscribed) {
+             attachTrack(publication.track);
+           }
+         });
+         participant.on('trackSubscribed', attachTrack);
+       });
+     })()
+    </script>
+  </body>
+</html>

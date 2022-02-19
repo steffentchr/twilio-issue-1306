@@ -1,0 +1,9 @@
+{
+  "twilio":{
+    "roomType":"group",   // 'group' or 'peer-to-peer'
+    "accountSid":"AC...",
+    "authToken":"...",
+    "apiKey":"SK...",
+    "apiSecret":"SZ..."
+  }
+}

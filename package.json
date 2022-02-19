@@ -1,0 +1,15 @@
+{
+  "name": "twilio-issue-1306",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -a localhost -p 8000 -c-1",
+    "create": "node create.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "twilio": "^3.74.0"
+  }
+}
