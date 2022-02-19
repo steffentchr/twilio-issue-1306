@@ -6,8 +6,10 @@
 ### Running
     
     npm i
-    npm run create
-    npm run start &
+    npm run create && npm run start
+
+### Testing
+    
     open "http://localhost:8000/participant.html" &
     open "http://localhost:8000/broadcaster.html" &
     

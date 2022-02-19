@@ -3,23 +3,28 @@
     <script src="//sdk.twilio.com/js/video/releases/2.20.0/twilio-video.min.js"></script>
   </head>
   <body>
-    <div>Webcam: <span>Started and added</span></div>
-    <div>Screen: <span id="screenStatus"></span></div>
+    <div>Room: <span id="roomStatus"></span></div>
+    <div>Test start: <span id="dateStatus"></span></div>
+    <div>Webcam: <span id="webcamStatus">On</span></div>
+    <div>Screen: <span id="screenStatus">Off</span></div>
     <div id="status"></div>
     <video id="webcam" muted autoplay></video>
     <video id="screen" muted autoplay></video>
     <script>
-     function screenStatus(text) {
-       document.getElementById('screenStatus').innerText = text;
+     function status(type, text) {
+       document.getElementById(type+'Status').innerText = text;
      }
+     status('date', (new Date));
      function timeout(ms) {
        return new Promise((resolve) => setTimeout(resolve, ms));
      }
-
+     
      (async function start() {
        var config = await (await fetch('/room.json')).json()
        var TOKEN = config.broadcasterToken;
-
+       status('room', config.roomSid);
+       
+       
        // Connect to video to play back
        var room = await Twilio.Video.connect(TOKEN, {
          automaticSubscription: true,
@@ -57,9 +62,9 @@
        webcamPublication.setPriority("high");
        webcam.attach(document.getElementById("webcam"));
 
-       // Wait for 120s to let the stream settle
-       screenStatus('Not added yet.');
-       await timeout(120000);
+       // Wait for 90s to let the stream settle
+       status('screen', 'Off');
+       await timeout(90000);
 
        // Add low priority screen
        var screenTrack = screen.getVideoTracks()[0];
@@ -75,13 +80,13 @@
        screenPublication.setPriority("low");
        screen.attach(document.getElementById("screen"));
 
-       screenStatus('Started and added.');
+       status('screen', 'On');
        
-       // Wait for 120s to let the stream settle
-       await timeout(120000);
+       // Wait for 180s to let the stream settle
+       await timeout(180000);
 
        // Unpublish from Twilio
-       screenStatus('Removed again.');
+       status('screen', 'Removed');
        screenPublication.unpublish();
        screenTrack.stop();
      })()

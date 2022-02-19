@@ -8,7 +8,7 @@ const roomFilename = "./room.json";
 
 (async function(){
   var roomName = "TwentyThreeTest" + ((new Date)*1);
-  const twilioToom = await client.video.rooms
+  const twilioRoom = await client.video.rooms
     .create({
       type: config.twilio.roomType,
       uniqueName: roomName
@@ -17,6 +17,7 @@ const roomFilename = "./room.json";
   //
   var room = {
     roomName,
+    roomSid:twilioRoom.sid,
     roomType:config.twilio.roomType
   };
   
